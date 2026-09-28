@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instala as dependências do servidor MCP
+RUN pip install --no-cache-dir mcp standard-mcp requests PyJWT
+
+# Copia o servidor e a chave pública de validação
+COPY mcp_server_real.py .
+COPY public_key.pem .
+
+# O container executará o script MCP diretamente sobre Stdio
+CMD ["python", "mcp_server_real.py"]
