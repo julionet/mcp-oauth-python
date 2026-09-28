@@ -1,0 +1,8 @@
+fastapi 
+uvicorn 
+PyJWT 
+cryptography 
+requests 
+mcp 
+standard-mcp 
+sqlalchemy
