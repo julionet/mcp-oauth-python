@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  oauth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "8000:8000"
+    volumes:
+      - oauth_data:/app
+    restart: always
+
+volumes:
+  oauth_data:
