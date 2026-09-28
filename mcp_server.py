@@ -1,49 +1,51 @@
 import os
 import sys
 import jwt
+import requests
 from mcp.server.fastmcp import FastMCP
 
-# Inicializa o servidor FastMCP
-mcp = FastMCP("Servidor MCP Protegido por BD")
+mcp = FastMCP("Servidor MCP Protegido com API de Dados")
 
-# Carrega a chave pública para VERIFICAR a autenticidade e integridade dos tokens
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(BASE_DIR, "public_key.pem"), "r") as f:
     PUBLIC_KEY = f.read()
 
-def obter_id_do_usuario_autenticado() -> int:
-    """
-    Recupera o token injetado pelo Wrapper, valida a assinatura assimétrica
-    e extrai o ID do usuário diretamente da claim 'sub' (sem tocar no banco).
-    """
+API_URL = "http://localhost:8000/api/notes"
+
+def obter_token_ambiente() -> str:
     token = os.environ.get("MCP_ACCESS_TOKEN")
     if not token:
         print("Erro Interno: Variável MCP_ACCESS_TOKEN ausente.", file=sys.stderr)
         raise PermissionError("Não autenticado.")
-        
-    try:
-        # Decodificação assimétrica segura usando o algoritmo RS256 e a chave PÚBLICA
-        payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
-        return int(payload["sub"])
-    except jwt.ExpiredSignatureError:
-        print("Erro: Token apresentado já expirou.", file=sys.stderr)
-        raise PermissionError("Sessão expirada no servidor central.")
-    except jwt.PyJWTError as e:
-        print(f"Erro de Validação de Token: {e}", file=sys.stderr)
-        raise PermissionError("Token inválido ou adulterado.")
-
-# --- EXPOSIÇÃO DE FERRAMENTA (TOOL) PARA A IA ---
+    return token
 
 @mcp.tool()
-def executar_acao_privada() -> str:
-    """Executa tarefas personalizadas e confidenciais com base nas credenciais do usuário logado."""
+def ler_minhas_notas_sensiveis() -> str:
+    """Busca com segurança todas as notas pessoais e corporativas do usuário logado no banco de dados central."""
     try:
-        # Extrai o ID com custo zero de banco e validação matemática instantânea
-        user_id = obter_id_do_usuario_autenticado()
-        return f"[Sucesso] Requisição aceita. O seu ID de usuário verificado no banco de dados central é #{user_id}."
+        # 1. Recupera o token injetado pelo Wrapper
+        token = obter_token_ambiente()
+        
+        # 2. Faz uma requisição segura para o backend central usando o token do usuário
+        headers = {"Authorization": f"Bearer {token}"}
+        resposta = requests.get(API_URL, headers=headers, timeout=5)
+        
+        if resposta.status_code == 200:
+            notas = resposta.json()
+            if not notas:
+                return "Você autenticou com sucesso, mas não possui nenhuma nota cadastrada no banco."
+            
+            resultado = "=== SUAS NOTAS PRIVADAS ENCONTRADAS NO BANCO ===\n"
+            for nota in notas:
+                resultado += f"\n📌 Título: {nota['title']}\n📝 Conteúdo: {nota['content']}\n"
+            return resultado
+        else:
+            return f"Erro ao acessar os dados no servidor central: Código {resposta.status_code}"
+            
     except PermissionError as e:
         return f"[Acesso Negado]: {str(e)}"
+    except Exception as e:
+        return f"Erro de comunicação com o banco de dados: {str(e)}"
 
 if __name__ == "__main__":
-    # Inicializa o ciclo de vida nativo do servidor MCP sob Stdio
     mcp.run()
