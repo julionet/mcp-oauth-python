@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "meu-servidor-mcp-oauth": {
+      "command": "/caminho/absoluto/para/seu/projeto/venv/bin/python",
+      "args": ["/caminho/absoluto/para/seu/projeto/mcp_wrapper.py"]
+    }
+  }
+}
