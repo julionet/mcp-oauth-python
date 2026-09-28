@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instala as dependências necessárias para criptografia e FastAPI
+RUN pip install --no-cache-dir fastapi uvicorn PyJWT cryptography sqlalchemy
+
+# Copia os arquivos do servidor e as chaves geradas
+COPY oauth_server.py .
+COPY private_key.pem .
+COPY public_key.pem .
+
+EXPOSE 8000
+
+CMD ["python", "oauth_server.py"]
