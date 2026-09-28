@@ -6,3 +6,38 @@
     }
   }
 }
+// mac
+{
+  "mcpServers": {
+    "meu-mcp-docker": {
+      "command": "docker",
+      "args": [
+        "run", 
+        "--rm", 
+        "-i", 
+        "-e", "MCP_ACCESS_TOKEN",
+        "-v", "~/.meu_mcp_auth.json:/app/.meu_mcp_auth.json:ro",
+        "--network=host",
+        "mcp-server-real"
+      ],
+      "env": {
+        "MCP_ACCESS_TOKEN": "AQUI_O_WRAPPER_OU_CLAUDE_INJETA"
+      }
+    }
+  }
+}
+//windows
+{
+  "mcpServers": {
+    "meu-mcp-docker": {
+      "command": "docker",
+      "args": [
+        "run", 
+        "--rm", 
+        "-i", 
+        "-v", "%USERPROFILE%/.meu_mcp_auth.json:/app/.meu_mcp_auth.json:ro",
+        "mcp-server-real"
+      ]
+    }
+  }
+}
